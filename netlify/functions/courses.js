@@ -95,7 +95,8 @@ exports.handler = async function(event) {
 
     // 🔥 your code for the reviews/ratings goes here
   }
-//
+
+  
   // return the standard response
   return {
     statusCode: 200,
