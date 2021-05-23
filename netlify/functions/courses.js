@@ -63,12 +63,17 @@ exports.handler = async function(event) {
 
   // set a new Array as part of the return value
   returnValue.sections = []
-
+  
   // ask Firebase for the sections corresponding to the Document ID of the course, wait for the response
   let sectionsQuery = await db.collection('sections').where(`courseId`, `==`, courseId).get()
 
   // get the documents from the query
   let sections = sectionsQuery.docs
+
+  //declare empty variables
+  returnValue.total = 0
+  returnValue.reviewNum = 0
+  returnValue.rating = 0
 
   // loop through the documents
   for (let i=0; i < sections.length; i++) {
@@ -93,8 +98,64 @@ exports.handler = async function(event) {
     // add the section Object to the return value
     returnValue.sections.push(sectionObject)
 
-    // 🔥 your code for the reviews/ratings goes here
+    // 🔥 your code for the reviews/ratings goes here 
+
+    // get reviews from firebase 
+    let reviewsQuery = await db.collection('reviews').where(`sectionId`, `==`, sectionId).get()
+
+    // get documents from query
+    let reviews = reviewsQuery.docs
+
+    // declare empty array and variables
+    sectionObject.reviews = [] 
+    sectionObject.total = 0
+    sectionObject.reviewNum = 0
+    sectionObject.rating = 0
+    
+    
+
+    // loop through reviews
+    for (let j=0; j < reviews.length; j++) {
+      // store review 
+      let review = reviews[j]
+      // store review id
+      let reviewId = review.id
+      // store review id
+      let reviewData = review.data()
+
+     
+      //populate reviews objects
+      let areview = {
+        sectionId: reviewData.sectionId,
+        body: reviewData.body,
+        rating: reviewData.rating
+      }
+      //section review counter
+      sectionObject.reviewNum++
+      //section update total
+      sectionObject.total =  sectionObject.total + reviewData.rating
+      //push to the section object array
+      sectionObject.reviews.push(areview) 
+   
+    }
+    //average rating for section
+    sectionObject.rating =  sectionObject.total/sectionObject.reviewNum
+    // course review update
+    returnValue.reviewNum =  returnValue.reviewNum + sectionObject.reviewNum
+    //course total update
+    returnValue.total =   returnValue.total + sectionObject.total
+    
+   
+
   }
+
+  //average ratings for course
+  returnValue.rating =   returnValue.total/ returnValue.reviewNum
+
+
+
+
+    
 
   
   // return the standard response
